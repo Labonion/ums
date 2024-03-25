@@ -1,7 +1,4 @@
-# UMS - Labonion
-Backend Repository for Markie
-
-<img align="right" width="33%" style="margin-bottom: 2em" src="./logo.svg">
+<img align="right" width="33%" style="margin-bottom: 3em" src="./logo.svg">
 
 # Hi, we're Labonion! :wave:
 
@@ -39,5 +36,7 @@ This project evolved from one of my personal project that I am working on which 
 We're excited to see what you build with UMS- by Labonion! :owl:
 
 We are also building something of our own,
+
+:onion:   [Markie - by Labonion][labonion] on ReadMe. <br>
 
 [labonion]: https://labonion.com
