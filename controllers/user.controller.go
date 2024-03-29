@@ -22,6 +22,8 @@ import (
 )
 
 var userRepository = repository.Repository("users")
+var spaceRepository = repository.Repository("spaces")
+var client = database.DB
 
 func hashPassword(password string) string {
 	rounds, _ := strconv.Atoi(os.Getenv("SALT"))
@@ -37,11 +39,26 @@ func comparePassword(password string, hash string) error {
 	return nil
 }
 
+func CreateSpace(space *models.Space) {
+
+}
+
 func ResgisterUser(c *gin.Context) {
+	session, sessionErr := client.StartSession()
+	if sessionErr != nil {
+		utils.Failure(c, bson.M{"message": "Session Error", "err": sessionErr}, http.StatusInternalServerError)
+		return
+	}
+	defer session.EndSession(context.Background())
+	transactionErr := session.StartTransaction()
+	if transactionErr != nil {
+		utils.Failure(c, bson.M{"message": "Transaction Error", "err": transactionErr}, http.StatusInternalServerError)
+		return
+	}
 	var newUser models.User
 	newUser.Id = primitive.NewObjectID()
 	if err := c.BindJSON(&newUser); err != nil {
-		utils.Failure(c, err, http.StatusBadRequest)
+		utils.Failure(c, bson.M{"message": "Malformed Payload", "err": err}, http.StatusBadRequest)
 		return
 	}
 	cur := userRepository.FindOne(&bson.M{"email": newUser.Email})
@@ -59,10 +76,32 @@ func ResgisterUser(c *gin.Context) {
 	}(newUser.Password)
 	hashedPassword := <-passwordChannel
 	newUser.Password = hashedPassword
-
+	var newSpace = &models.Space{
+		Id:    primitive.NewObjectID(),
+		Users: make([]models.SpaceUsers, 0),
+		Name:  newUser.Firstname + "'s" + " Sapce",
+		Admin: newUser.Id,
+	}
+	spaceIdChannel := make(chan string)
+	go func(space *models.Space) {
+		_, err := spaceRepository.InsertOne(space)
+		if err != nil {
+			utils.Failure(c, bson.M{"message": "Space creation failed"}, http.StatusInternalServerError)
+			session.AbortTransaction(context.Background())
+			return
+		}
+		spaceIdChannel <- newSpace.Id.String()
+	}(newSpace)
+	newUser.MySpaces = append(newUser.MySpaces, newSpace.Id)
 	res, err := userRepository.InsertOne(newUser)
 	if err != nil {
-		utils.Failure(c, err, http.StatusInternalServerError)
+		utils.Failure(c, bson.M{"message": "Error occured while inserting doc", "err": err}, http.StatusInternalServerError)
+		session.AbortTransaction(context.Background())
+		return
+	}
+	if commitErr := session.CommitTransaction(context.Background()); commitErr != nil {
+		utils.Failure(c, bson.M{"message": "Commit Error", "err": commitErr}, http.StatusInternalServerError)
+		session.AbortTransaction(context.Background())
 		return
 	}
 	utils.Success(c, bson.M{"id": res.InsertedID}, http.StatusCreated)

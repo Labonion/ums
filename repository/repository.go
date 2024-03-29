@@ -80,6 +80,11 @@ func (repository *AbstractRepository) InsertOne(doc interface{}) (*mongo.InsertO
 		session.AbortTransaction(context.Background())
 		return nil, err
 	}
+	if commitErr := session.CommitTransaction(context.Background()); commitErr != nil {
+		log.Fatal(commitErr)
+		session.AbortTransaction(context.Background())
+		return nil, commitErr
+	}
 	return cur, nil
 }
 
