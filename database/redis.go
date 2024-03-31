@@ -40,3 +40,11 @@ func GetData(client *redis.Client, key string) (string, error) {
 	}
 	return val, nil
 }
+
+func DeleteKey(client *redis.Client, key string) (bool, error) {
+	_, err := client.Del(context.Background(), key).Result()
+	if err != nil {
+		return false, err
+	}
+	return true, nil
+}

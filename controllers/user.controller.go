@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"context"
-	"fmt"
 	"markie-backend/database"
 	"markie-backend/models"
 	"markie-backend/repository"
@@ -76,6 +75,8 @@ func ResgisterUser(c *gin.Context) {
 	}(newUser.Password)
 	hashedPassword := <-passwordChannel
 	newUser.Password = hashedPassword
+	newUser.MySpaces = make([]primitive.ObjectID, 0)
+	newUser.SharedSpaces = make([]primitive.ObjectID, 0)
 	var newSpace = &models.Space{
 		Id:    primitive.NewObjectID(),
 		Users: make([]models.SpaceUsers, 0),
@@ -136,6 +137,60 @@ func GetUserById(c *gin.Context) {
 
 }
 
+func GetUserSpaces(c *gin.Context) {
+	userID, exists := c.Get("userId")
+
+	if !exists {
+		utils.Failure(c, bson.M{"error": "User ID not found in context"}, http.StatusInternalServerError)
+		return
+	}
+
+	id, err_ := primitive.ObjectIDFromHex(userID.(string))
+	if err_ != nil {
+		utils.Failure(c, bson.M{"error": "Count not find user"}, http.StatusInternalServerError)
+		return
+	}
+
+	filter := bson.M{"_id": id}
+
+	lookupStage1 := bson.M{
+		"$lookup": bson.M{
+			"from":         "spaces",
+			"localField":   "my_spaces",
+			"foreignField": "_id",
+			"as":           "mySpaces",
+		},
+	}
+
+	lookupStage2 := bson.M{
+		"$lookup": bson.M{
+			"from":         "spaces",
+			"localField":   "shared_spaces",
+			"foreignField": "_id",
+			"as":           "sharedSpaces",
+		},
+	}
+
+	curr, err := userRepository.Aggregate(&filter, lookupStage1, lookupStage2)
+
+	if err != nil {
+		utils.Failure(c, bson.M{"message": "Error Fetching User", "error": err}, http.StatusInternalServerError)
+		return
+	}
+
+	var result []models.UserSpaces
+	if err = curr.All(context.Background(), &result); err != nil {
+		utils.Failure(c, err, http.StatusInternalServerError)
+		return
+	}
+	if len(result) == 0 {
+		utils.Success(c, bson.M{"user": result[0]}, http.StatusNoContent)
+		return
+	}
+
+	utils.Success(c, bson.M{"user": result[0]}, http.StatusOK)
+}
+
 func GetUsers(c *gin.Context) {
 	curr, err := userRepository.FindAll(&bson.M{})
 
@@ -153,6 +208,15 @@ func GetUsers(c *gin.Context) {
 		return
 	}
 	utils.Success(c, bson.M{"users": results}, http.StatusOK)
+}
+
+func Logout(c *gin.Context) {
+	var apiKey = c.GetHeader("X-API-KEY")
+	res, err := database.DeleteKey(database.RedisClient, apiKey)
+	if err != nil {
+		utils.Failure(c, bson.M{"message": "Redis threw error", "error": err}, http.StatusInternalServerError)
+	}
+	utils.Success(c, bson.M{"loggedOut": res}, http.StatusOK)
 }
 
 func Login(c *gin.Context) {
@@ -205,7 +269,7 @@ func Login(c *gin.Context) {
 	tokenString, err := token.SignedString([]byte(jwtSecret))
 
 	if err != nil {
-		fmt.Println(err, jwtSecret)
+		utils.Failure(c, bson.M{"message": "JWT Error", "error": err}, http.StatusInternalServerError)
 		return
 	}
 
@@ -216,14 +280,16 @@ func Login(c *gin.Context) {
 	result.Firstname = user.Firstname
 	result.Lastname = user.Lastname
 	result.UUID = uuid.New().String()
+	result.MySpaces = user.MySpaces
+	result.SharedSpaces = user.SharedSpaces
 
 	if err != nil {
-		utils.Failure(c, bson.M{"Message": "Redis Client failed to connect"}, http.StatusInternalServerError)
+		utils.Failure(c, bson.M{"message": "Redis Client failed to connect"}, http.StatusInternalServerError)
 		return
 	}
 
 	if err := database.SetData(database.RedisClient, result.UUID, "Bearer "+tokenString, time.Hour*24); err != nil {
-		utils.Failure(c, bson.M{"Message": "Could not set Token, Try Again"}, http.StatusInternalServerError)
+		utils.Failure(c, bson.M{"message": "Could not set Token, Try Again"}, http.StatusInternalServerError)
 	}
 
 	utils.Success(c, bson.M{"message": "Login successful", "user": result}, http.StatusOK)

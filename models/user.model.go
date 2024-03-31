@@ -24,11 +24,11 @@ type SpaceUsers struct {
 }
 
 type Space struct {
-	Id    primitive.ObjectID `json:"_id" bson:"_id"`
-	Users []SpaceUsers       `json:"users" bson:"users"`
-	Name  string             `json:"name" bson:"name"`
-	Admin primitive.ObjectID `json:"admin" bson:"admin"`
-	CreatedAt   primitive.DateTime `json:"createdAt" bson:"createdAt"`
+	Id        primitive.ObjectID `json:"_id" bson:"_id"`
+	Users     []SpaceUsers       `json:"users" bson:"users"`
+	Name      string             `json:"name" bson:"name"`
+	Admin     primitive.ObjectID `json:"admin" bson:"admin"`
+	CreatedAt primitive.DateTime `json:"createdAt" bson:"createdAt"`
 }
 
 type Comment struct {
@@ -46,11 +46,19 @@ type Login struct {
 }
 
 type LoginSuccess struct {
-	Id        primitive.ObjectID `json:"id"`
-	Firstname string             `json:"firstName" bson:"firstName"`
-	Lastname  string             `json:"lastName" bson:"lastName"`
-	Email     string             `json:"email"`
-	UUID      string             `json:"userUUID"`
+	Id           primitive.ObjectID   `json:"id"`
+	Firstname    string               `json:"firstName" bson:"firstName"`
+	Lastname     string               `json:"lastName" bson:"lastName"`
+	Email        string               `json:"email"`
+	UUID         string               `json:"userUUID"`
+	MySpaces     []primitive.ObjectID `json:"my_spaces"`
+	SharedSpaces []primitive.ObjectID `json:"shared_spaces"`
+}
+
+type UserSpaces struct {
+	Id           primitive.ObjectID `json:"_id" bson:"_id"`
+	MySpaces     []Space            `json:"mySpaces" bson:"mySpaces"`
+	SharedSpaces []Space            `json:"sharedSpaces" bson:"sharedSpaces"`
 }
 
 type Verify struct {
