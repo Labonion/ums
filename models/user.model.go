@@ -64,3 +64,11 @@ type UserSpaces struct {
 type Verify struct {
 	Token string `json:"token"`
 }
+
+type PromptPayload struct {
+	Content string `json:"content" bson:"content"`
+}
+
+type Message struct {
+	Prompt string `json:"prompt" bson:"prompt"`
+}

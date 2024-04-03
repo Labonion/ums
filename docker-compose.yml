@@ -27,3 +27,9 @@ services:
     depends_on:
       - mongodb
     env_file: .env
+  ai:
+    build:
+      context: ./ai
+      dockerfile: Dockerfile
+    ports:
+      - "8000:5000"

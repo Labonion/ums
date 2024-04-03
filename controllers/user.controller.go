@@ -2,6 +2,9 @@ package controllers
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
+	"log"
 	"markie-backend/database"
 	"markie-backend/models"
 	"markie-backend/repository"
@@ -321,4 +324,33 @@ func VerifyUser(c *gin.Context) {
 
 	utils.Success(c, bson.M{"verified": true}, http.StatusOK)
 
+}
+
+func ReceivePrompt(c *gin.Context) {
+	var payload models.PromptPayload
+	if err := c.BindJSON(&payload); err != nil {
+		utils.Failure(c, bson.M{"message": "Invalid Payload", "error": err}, http.StatusBadRequest)
+		return
+	}
+	userID, exists := c.Get("userId")
+
+	if !exists {
+		utils.Failure(c, bson.M{"error": "User ID not found in context"}, http.StatusInternalServerError)
+		return
+	}
+
+	channelName := fmt.Sprintf("user:%s", userID)
+	var message = &models.Message{
+		Prompt: payload.Content,
+	}
+	messageJSON, err := json.Marshal(message)
+	if err != nil {
+		log.Println("Error marshaling message:", err)
+		return
+	}
+	err = database.RedisClient.Publish(context.Background(), channelName, messageJSON).Err()
+	if err != nil {
+		log.Println("Error publishing message:", err)
+	}
+	utils.Success(c, bson.M{"content": payload.Content}, http.StatusOK)
 }
