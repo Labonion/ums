@@ -19,7 +19,6 @@ def to_markdown(text):
 
 GOOGLE_API_KEY=os.getenv('GOOGLE_API_KEY')
 
-print(GOOGLE_API_KEY)
 genai.configure(api_key=GOOGLE_API_KEY)
 
 model = genai.GenerativeModel('gemini-1.0-pro')
