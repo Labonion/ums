@@ -1,6 +1,9 @@
 copy_env:
 	@cp .env.example .env
 	@echo ".env.example copied to .env"
+copy_ai_env:
+	@cp ai/.env.example ai/.env
+	@echo "ai/.env.example copied to ai/.env"
 
 run_server:
 	docker compose up --build

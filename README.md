@@ -30,6 +30,8 @@ This project evolved from one of my personal project that I am working on which 
 5. It uses a common repository interface that allows you to create controllers on the go.
 6. It has pre built redis and mongodb connections for seamless development
 7. For Authentication all you need is a header with X-API-KEY and the UUID Generated after login.
+8. The AI Module exposes an api where it can stream output based on prompt
+9. Spaces - Spaces is a concept where you can add mutiple users to a space and converse, manage and monitor within that space.
 
 ### But most of all?
 
