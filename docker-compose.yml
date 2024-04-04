@@ -31,5 +31,6 @@ services:
     build:
       context: ./ai
       dockerfile: Dockerfile
+    env_file: ./ai/.env
     ports:
       - "8000:5000"

@@ -19,6 +19,7 @@ def to_markdown(text):
 
 GOOGLE_API_KEY=os.getenv('GOOGLE_API_KEY')
 
+print(GOOGLE_API_KEY)
 genai.configure(api_key=GOOGLE_API_KEY)
 
 model = genai.GenerativeModel('gemini-1.0-pro')
@@ -28,9 +29,10 @@ redis_pass = os.getenv('REDIS_PASSWORD')
 host = os.getenv('REDIS_HOST')
 port = int(os.getenv('REDIS_PORT'))
 
+
 app = Flask(__name__)
 CORS(app, resources={r"/stream/*": {"origins": "http://localhost:3000"}})  # Allow requests from localhost:3000
-cache = redis.Redis(host='redis', port=6379)
+cache = redis.Redis(host=host, port=port)
 
 def preprocess_json_string(json_string):
     # Ensure keys are enclosed in double quotes
