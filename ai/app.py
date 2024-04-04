@@ -21,7 +21,7 @@ GOOGLE_API_KEY=os.getenv('GOOGLE_API_KEY')
 
 genai.configure(api_key=GOOGLE_API_KEY)
 
-model = genai.GenerativeModel('gemini-pro')
+model = genai.GenerativeModel('gemini-1.0-pro')
 
 
 redis_pass = os.getenv('REDIS_PASSWORD')
@@ -145,6 +145,7 @@ def get_content(message: str):
          'parts': [
              "You are an expert React and Tailwind developer",
              f"Your goal is to generate a DOM json for the query i provide. The DOM and PROPS interface are as follows {DOM}",
+             f"children & type should be present in each node, if not with an empty array",
              "Follow the comments given in the interfaces for each key",
              f"Use the following example {EXAMPLE}",
             "Use Tailwind classes only",
