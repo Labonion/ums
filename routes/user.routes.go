@@ -15,6 +15,4 @@ func UserRoutes(rg *gin.RouterGroup) {
 	users.GET("/:id", middlewares.VerifyMiddleware(), controllers.GetUserById)
 	users.POST("/login", controllers.Login)
 	users.POST("/logout", middlewares.VerifyMiddleware(), controllers.Logout)
-	users.GET("/spaces", middlewares.VerifyMiddleware(), controllers.GetUserSpaces)
-	users.POST("/prompt", middlewares.VerifyMiddleware(), controllers.ReceivePrompt)
 }

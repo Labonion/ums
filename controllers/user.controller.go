@@ -341,7 +341,9 @@ func ReceivePrompt(c *gin.Context) {
 
 	channelName := fmt.Sprintf("user:%s", userID)
 	var message = &models.Message{
-		Prompt: payload.Content,
+		Prompt:        payload.Content,
+		DOM:           payload.DOM,
+		SelectedLayer: payload.SelectedLayer,
 	}
 	messageJSON, err := json.Marshal(message)
 	if err != nil {

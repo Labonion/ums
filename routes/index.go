@@ -8,6 +8,8 @@ func GetRoutes(r *gin.Engine) {
 	route := r.Group("/")
 	api := r.Group("/api")
 	UserRoutes(api)
+	SpaceRoutes(api)
+	PromptRoutes(api)
 	route.GET("health", healthcheck)
 }
 

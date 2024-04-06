@@ -66,9 +66,13 @@ type Verify struct {
 }
 
 type PromptPayload struct {
-	Content string `json:"content" bson:"content"`
+	Content       string `json:"content" bson:"content"`
+	DOM           string `json:"dom" bson:"dom"`
+	SelectedLayer string `json:"selectedLayer" bson:"selectedLayer"`
 }
 
 type Message struct {
-	Prompt string `json:"prompt" bson:"prompt"`
+	Prompt        string `json:"prompt" bson:"prompt"`
+	DOM           string `json:"dom" bson:"dom"`
+	SelectedLayer string `json:"selectedLayer" bson:"selectedLayer"`
 }
