@@ -13,6 +13,7 @@ import textwrap
 
 from IPython.display import display
 from IPython.display import Markdown
+from logging import Logger
 
 
 def to_markdown(text):
@@ -35,6 +36,7 @@ port = int(os.getenv('REDIS_PORT'))
 app = Flask(__name__)
 CORS(app, resources={r"/stream/*": {"origins": "http://localhost:3000"}})
 cache = redis.Redis(host=host, port=port)
+logger = Logger("my_logger")
 
 
 def preprocess_json_string(json_string):
@@ -64,14 +66,17 @@ def parse_json_from_string(string):
 @app.route('/stream/<user_id>')
 def stream(user_id):
     channel_name = f"user:{user_id}"
+    logger.info(f"Subscribed to {channel_name}")
+
     pubsub = cache.pubsub()
     pubsub.subscribe(channel_name)
     return Response(event_stream(pubsub), mimetype="text/event-stream")
 
 
-def get_content(message: str, selectedLayer):
+def get_content(message: str):
     prompt = PROMPT()
-    messages = prompt.scratch_generation(message=message, selectedLayer=selectedLayer)
+    messages = prompt.scratch_generation(
+        message=message)
     response = model.generate_content(messages)
 
     try:
@@ -86,11 +91,14 @@ def event_stream(pubsub):
         for message in pubsub.listen():
             if message['type'] == 'message':
                 payload = json.loads(message['data'])
-                selectedLayer = json.loads(payload['selectedLayer'])
-                chunk = get_content(payload['prompt'],selectedLayer=selectedLayer)
+                logger.info("Received Payload")
+                chunk = get_content(
+                    payload['prompt'])
+                logger.info(chunk)
                 resp = {
                     "content": parse_json_from_string(chunk),
                 }
+                logger.info(json.dumps(resp))
                 yield f"data: {json.dumps(resp)}\n\n"
 
     except GeneratorExit:
